@@ -1,19 +1,61 @@
 import { gql, useQuery } from "@apollo/client";
 import { useParams } from "react-router-dom";
+import styled from "styled-components";
 
 const GET_MOVIE = gql`
     query getMovie($movieId: Int!) {
         movie(id: $movieId) {
             id
             title
+            medium_cover_image
+            rating
         }
     }
+`;
+
+const Container = styled.div`
+  height: 100vh;
+  background-image: linear-gradient(-45deg, #d754ab, #fd723a);
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  color: white;
+`;
+
+const Column = styled.div`
+  margin-left: 10px;
+  width: 50%;
+`;
+
+const Title = styled.h1`
+  font-size: 65px;
+  margin-bottom: 15px;
+`;
+
+const Subtitle = styled.h4`
+  font-size: 35px;
+  margin-bottom: 10px;
+`;
+
+const Description = styled.p`
+  font-size: 28px;
+`;
+
+const Image = styled.div`
+  width: 25%;
+  height: 60%;
+  background-color: transparent;
+  background-image: url(${(props) => props.bg});
+  background-size: cover;
+  background-position: center center;
+  border-radius: 7px;
 `;
 
 export default function Movie() {
     const {id} = useParams();
     const pageId = Number(id);
-    const {data, loading, error} = useQuery(GET_MOVIE, {
+    const {data, loading} = useQuery(GET_MOVIE, {
         variables: {
             movieId: pageId
         },
@@ -28,11 +70,13 @@ export default function Movie() {
         서버의 응답 data가 캐시 data와 다를 경우 캐시 data를 업데이트 시키고 data를 반환하게된다.
         */
     });
-    if (loading) {
-        return <h1>영화 정보를 가져오는 중!!</h1>
-    }
-    if (error) {
-        return <h1>서버와 통신이 불안정합니다! 잠시후 다시 시도 부탁!!...</h1>
-    }
-    return <div>{data.movie.title}</div>;
+    return (
+        <Container>
+            <Column>
+                <Title>{loading ? "Loading..." : `${data.movie?.title}`}</Title>
+                <Subtitle>⭐️ {data?.movie?.rating}</Subtitle>
+            </Column>
+            <Image bg={data?.movie?.medium_cover_image} />
+        </Container>
+    );
 }
