@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 
 const ALL_MOVIES = gql`
-    query getMovies {
-        allMovies {
-            id
-            title
-            medium_cover_image
-        }
+  query getMovies {
+    allMovies {
+      id
+      title
+      medium_cover_image
     }
+  }
 `;
 
 const Container = styled.div`
@@ -20,7 +20,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  background-image: linear-gradient(-45deg, #d754ab, #fd723a);
+  background-image: linear-gradient(-45deg, #f5f5f5, #fd9a11);
   height: 45vh;
   color: white;
   display: flex;
@@ -47,7 +47,8 @@ const MoviesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-gap: 25px;
-  width: 60%;
+  width: 100%;
+  max-width: 1000px;
   position: relative;
   top: -50px;
 `;
@@ -70,22 +71,22 @@ const PosterBg = styled.div`
 `;
 
 export default function Movies() {
-    const { data, loading } = useQuery(ALL_MOVIES);
-    return (
-        <Container>
-            <Header>
-            <Title>Apollo Movies</Title>
-            </Header>
-            {loading && <Loading>Loading...</Loading>}
-            <MoviesGrid>
-            {data?.allMovies?.map((movie) => (
-                <PosterContainer key={movie.id}>
-                <Link to={`/movies/${movie.id}`}>
-                    <PosterBg background={movie.medium_cover_image} />
-                </Link>
-                </PosterContainer>
-            ))}
-            </MoviesGrid>
-        </Container>
-    );
+  const { data, loading } = useQuery(ALL_MOVIES);
+  return (
+    <Container>
+      <Header>
+      <Title>Movies</Title>
+      </Header>
+      {loading && <Loading>Loading...</Loading>}
+      <MoviesGrid>
+      {data?.allMovies?.map((movie) => (
+        <PosterContainer key={movie.id}>
+        <Link to={`/movies/${movie.id}`}>
+          <PosterBg background={movie.medium_cover_image} />
+        </Link>
+        </PosterContainer>
+      ))}
+      </MoviesGrid>
+    </Container>
+  );
 }

@@ -6,16 +6,24 @@ const GET_MOVIE = gql`
     query getMovie($movieId: Int!) {
         movie(id: $movieId) {
             id
-            title
+            title_long
             medium_cover_image
             rating
+            runtime
+            language
+            isLiked @client 
         }
     }
 `;
+/*
+GET_MOVIE query에 isLiked @client는 사용자가 like버튼을 눌렀는지 확인을 하는 값을 저장할 것이다.
+하지만 내가 만든 api movie 필드에는 isLiked가 존재하지 않기에 @client 속성을 활용하여 로컬 전용 필드임을 아폴로 클라이언트에 알려
+query가 날라갈 때 생략되도록 할 수 있다.
+*/
 
 const Container = styled.div`
   height: 100vh;
-  background-image: linear-gradient(-45deg, #d754ab, #fd723a);
+  background-image: linear-gradient(-45deg, #f5f5f5, #fd9a11);
   width: 100%;
   display: flex;
   justify-content: space-around;
@@ -35,11 +43,19 @@ const Title = styled.h1`
 
 const Subtitle = styled.h4`
   font-size: 35px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 `;
 
-const Description = styled.p`
-  font-size: 28px;
+const LikeBtn = styled.button`
+    padding: 5px 15px;
+    background-color: #ffffff;
+    border: 0;
+    border-radius: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    &:hover{
+        box-shadow: 2px 2px 85px #f5f5f5;
+    }
 `;
 
 const Image = styled.div`
@@ -55,7 +71,7 @@ const Image = styled.div`
 export default function Movie() {
     const {id} = useParams();
     const pageId = Number(id);
-    const {data, loading} = useQuery(GET_MOVIE, {
+    const {data, loading, client:{cache},} = useQuery(GET_MOVIE, {
         variables: {
             movieId: pageId
         },
@@ -70,13 +86,35 @@ export default function Movie() {
         서버의 응답 data가 캐시 data와 다를 경우 캐시 data를 업데이트 시키고 data를 반환하게된다.
         */
     });
+    const onClick = () => {
+        cache.writeFragment({
+            id: `Movie:${pageId}`,
+            fragment: gql`
+                fragment MovieFragment on Movie {
+                    isLiked
+                }
+            `,
+            data: {
+                isLiked: !data.movie.isLiked,
+            },
+        });
+        /*
+        내가 원하는 MovieId data를 가진 cache의 MovieFragment이름의 fragment 객체를 write하는 코드이다.
+        */
+    };
     return (
         <Container>
             <Column>
-                <Title>{loading ? "Loading..." : `${data.movie?.title}`}</Title>
-                <Subtitle>⭐️ {data?.movie?.rating}</Subtitle>
+                <Title>{loading ? "Loading..." : data?.movie?.title_long}</Title>
+                {!loading && data?.movie && (
+                    <>
+                        <Subtitle>🕒 {data.movie.runtime}</Subtitle>
+                        <Subtitle>⭐️ {data.movie.rating}</Subtitle>
+                        <LikeBtn onClick={onClick}>{data.movie.isLiked ? "Unlike 👎":"Like 👍"}</LikeBtn>
+                    </>
+                )}
             </Column>
-            <Image bg={data?.movie?.medium_cover_image} />
+            {!loading && data?.movie && <Image bg={data.movie.medium_cover_image} />}
         </Container>
     );
 }
